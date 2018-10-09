@@ -18,7 +18,6 @@ public class AddGameActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.addgame);
         Spinner();
-
     }
 
     private void Spinner() {

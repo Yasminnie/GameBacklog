@@ -1,5 +1,6 @@
 package yazzyyas.gamebacklog;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.design.widget.FloatingActionButton;
@@ -28,18 +29,15 @@ public class MainActivity extends AppCompatActivity {
     public final static int TASK_DELETE_GAME = 1;
     public final static int TASK_UPDATE_GAME = 2;
     public final static int TASK_INSERT_GAME = 3;
+    public List<Game> games = new ArrayList<>();
+    private GameAdapter gameAdapter;
+    static AppDatabase db;
 
     @BindView(R.id.fabAddGame)
     FloatingActionButton fabAddGame;
 
-    public List<Game> games = new ArrayList<>();
-
     @BindView(R.id.gameRecyclerView)
     RecyclerView gameRecyclerView;
-
-    private GameAdapter gameAdapter;
-
-    static AppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         fabAddGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                db.gameDao().insertGames(newGame);
+                new GameAsyncTask(TASK_INSERT_GAME).execute(newGame);
                 Intent intent = new Intent(MainActivity.this, AddGameActivity.class);
                 startActivity(intent);
             }
@@ -80,10 +78,10 @@ public class MainActivity extends AppCompatActivity {
                     public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
                         int position = (viewHolder.getAdapterPosition());
                         if (swipeDir == ItemTouchHelper.LEFT) {
-                            db.gameDao().deleteGames(games.get(position));
+                            new GameAsyncTask(TASK_DELETE_GAME).execute(games.get(position));
+                            games.remove(position);
                             Toast.makeText(MainActivity.this, "Links swipen", Toast.LENGTH_SHORT).show();
                         } else {
-                            db.gameDao().deleteGames(games.get(position));
                             Toast.makeText(MainActivity.this, "Rechts swipen", Toast.LENGTH_SHORT).show();
                         }
 //                        gameAdapter.notifyItemChanged(position);
@@ -98,10 +96,23 @@ public class MainActivity extends AppCompatActivity {
 
     public void onGameDbUpdated(List list) {
         games = list;
-        updateUI();
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == 1234) {
+                Bundle bundle = data.getExtras();
+                Game intentGame = (Game) bundle.getSerializable("portal");
+                games.add(intentGame);
+
+                Game updatedGame = data.getParcelableExtra(MainActivity.EXTRA_REMINDER);
+                games.set(mModifyPosition, updatedGame);
+                updateUI();
+                new GameAsyncTask(TASK_UPDATE_REMINDER).execute(updatedGame);
+            }
+        }
     }
 }
-
 
 public class GameAsyncTask extends AsyncTask<Game, Void, List> {
 
@@ -113,7 +124,7 @@ public class GameAsyncTask extends AsyncTask<Game, Void, List> {
 
     @Override
     protected List doInBackground(Game... games) {
-        switch (taskCode){
+        switch (taskCode) {
             case TASK_DELETE_GAME:
                 db.gameDao().deleteGames(games[0]);
                 break;
