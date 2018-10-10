@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
+import yazzyyas.gamebacklog.database.AppDatabase;
 
 import static yazzyyas.gamebacklog.MainActivity.TASK_DELETE_GAME;
 import static yazzyyas.gamebacklog.MainActivity.TASK_INSERT_GAME;

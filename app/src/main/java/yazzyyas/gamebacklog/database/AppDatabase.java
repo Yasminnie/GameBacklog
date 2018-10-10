@@ -1,4 +1,4 @@
-package yazzyyas.gamebacklog;
+package yazzyyas.gamebacklog.database;
 
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
