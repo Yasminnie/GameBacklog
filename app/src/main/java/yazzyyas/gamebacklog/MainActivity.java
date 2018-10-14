@@ -3,6 +3,7 @@ package yazzyyas.gamebacklog;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,41 +17,58 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.BindView;
 import yazzyyas.gamebacklog.database.AppDatabase;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MyRecyclerViewAdapter.ItemClickListener {
+
+    static AppDatabase db;
+    static final int REQUEST_CODE = 1234;
+    public static final String EXTRA_GAME = "Games";
 
     public final static int TASK_GET_ALL_GAMES = 0;
     public final static int TASK_DELETE_GAME = 1;
     public final static int TASK_UPDATE_GAME = 2;
     public final static int TASK_INSERT_GAME = 3;
+
     public List<Game> games = new ArrayList<>();
-    private GameAdapter gameAdapter;
-    static AppDatabase db;
-
-    @BindView(R.id.fabAddGame)
-    FloatingActionButton fabAddGame;
-
-    @BindView(R.id.gameRecyclerView)
     RecyclerView gameRecyclerView;
+    private MyRecyclerViewAdapter gameAdapter;
+
+    FloatingActionButton fabAddGame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        db = AppDatabase.getInstance(this);
+        fabAddGame = findViewById(R.id.fabAddGame);
+        fabAddGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), AddGameActivity.class);
+                startActivityForResult(intent, TASK_INSERT_GAME);
+            }
+        });
 
+        db = AppDatabase.getInstance(this);
+        GameRepository gameRepository = new GameRepository(this);
+        gameRepository.insert(new Game("hey", "testje", "alles goed?"));
+
+        new GameAsyncTask(TASK_GET_ALL_GAMES).execute();
+        db.gameDao().insertGames(new Game("ab", "cd", "asdf"));
+
+        games.add(new Game("a", "b", "c"));
+        games.add(new Game("d", "e", "f"));
+
+        this.gameAdapter = new MyRecyclerViewAdapter(this, games);
+
+        gameRecyclerView = findViewById(R.id.gameRecyclerView);
+        gameRecyclerView.setAdapter(gameAdapter);
 
         RecyclerView.LayoutManager layoutManager = new StaggeredGridLayoutManager(3, LinearLayoutManager.VERTICAL);
         gameRecyclerView.setLayoutManager(layoutManager);
 
-        /*
-            Add a touch helper to the RecyclerView to recognize when a user swipes.
-            An ItemTouchHelper enables touch behavior (like swipe and move) non each ViewHolder,
-            and uses callbacks to signal when a user is performing these actions.
-         */
+        updateUI();
 
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback =
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -60,41 +78,55 @@ public class MainActivity extends AppCompatActivity {
                         return false;
                     }
 
-                    //Called when a user swipes left or right on a ViewHolder
                     @Override
                     public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
                         int position = (viewHolder.getAdapterPosition());
-                        if (swipeDir == ItemTouchHelper.LEFT) {
-                            new GameAsyncTask(TASK_DELETE_GAME).execute(games.get(position));
-                            games.remove(position);
-                            Toast.makeText(MainActivity.this, "Links swipen", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(MainActivity.this, "Rechts swipen", Toast.LENGTH_SHORT).show();
-                        }
-//                        gameAdapter.notifyItemChanged(position);
-                        gameAdapter.swapList(games);
+                        new GameAsyncTask(TASK_DELETE_GAME).execute(games.get(position));
+                        Toast.makeText(MainActivity.this, "swipen testt", Toast.LENGTH_SHORT).show();
                     }
                 };
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
         itemTouchHelper.attachToRecyclerView(gameRecyclerView);
-
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        new GameAsyncTask(TASK_GET_ALL_GAMES).execute();
-        games = (List<Game>) db.gameDao().getAllGames();
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == Activity.RESULT_OK) {
+            switch (requestCode) {
+                case TASK_INSERT_GAME:
+                    Game updatedGame = data.getParcelableExtra(MainActivity.EXTRA_GAME);
+                    new MainActivity.GameAsyncTask(TASK_UPDATE_GAME).execute(updatedGame);
+                    break;
+                case TASK_UPDATE_GAME:
+                    Game insertGame = data.getParcelableExtra(MainActivity.EXTRA_GAME);
+                    new MainActivity.GameAsyncTask(TASK_INSERT_GAME).execute(insertGame);
+                    break;
+            }
+        }
     }
 
     public void onGameDbUpdated(List list) {
         games = list;
+        updateUI();
     }
 
+    @Override
+    public void onItemClick(View view, int position) {
+    }
 
-    public static class GameAsyncTask extends AsyncTask<Game, Void, List> {
+    private void updateUI() {
+        if (gameAdapter == null) {
+            gameAdapter = new MyRecyclerViewAdapter(this, games);
+            gameRecyclerView.setAdapter(gameAdapter);
+        } else {
+            gameAdapter.swapList(games);
+        }
+    }
 
+    public class GameAsyncTask extends AsyncTask<Game, Void, List> {
         private int taskCode;
 
         public GameAsyncTask(int taskCode) {
@@ -116,14 +148,13 @@ public class MainActivity extends AppCompatActivity {
             }
 
             //To return a new list with the updated data, we get all the data from the database again.
-            return (List) db.gameDao().getAllGames();
+            return db.gameDao().getAllGames().getValue();
         }
-
 
         @Override
         protected void onPostExecute(List list) {
             super.onPostExecute(list);
+            onGameDbUpdated(list);
         }
     }
 }
-

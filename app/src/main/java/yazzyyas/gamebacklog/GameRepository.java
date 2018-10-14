@@ -1,20 +1,19 @@
-package yazzyyas.gamebacklog.database;
+package yazzyyas.gamebacklog;
 
-import android.app.Application;
 import android.arch.lifecycle.LiveData;
+import android.content.Context;
 import android.os.AsyncTask;
-
 import java.util.List;
-
-import yazzyyas.gamebacklog.Game;
+import yazzyyas.gamebacklog.database.AppDatabase;
+import yazzyyas.gamebacklog.database.GameDao;
 
 public class GameRepository {
 
     private GameDao gameDao;
     private LiveData<List<Game>> allGames;
 
-    GameRepository( Application application) {
-        AppDatabase db = AppDatabase.getInstance(application);
+    GameRepository( Context context ) {
+        AppDatabase db = AppDatabase.getInstance(context);
         gameDao = db.gameDao();
     }
 
@@ -27,7 +26,6 @@ public class GameRepository {
     }
 
     private static class insertAsyncTask extends AsyncTask<Game, Void, Void> {
-
         private GameDao mAsyncTaskDao;
 
         insertAsyncTask(GameDao dao) {

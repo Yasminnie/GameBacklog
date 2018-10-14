@@ -12,18 +12,19 @@ import java.util.List;
 import yazzyyas.gamebacklog.Game;
 
 @Dao
+
 public interface GameDao {
-    @Query("SELECT * FROM GameBacklog")
-    public LiveData<List<Game>> getAllGames();
+    @Query("SELECT * FROM game")
+    LiveData<List<Game>> getAllGames();
 
     @Insert
-    public void insertGames(Game games);
+    void insertGames(Game games);
 
 
     @Delete
-    public void deleteGames(Game games);
+    void deleteGames(Game games);
 
 
     @Update
-    public void updateGames(Game games);
+    void updateGames(Game games);
 }
