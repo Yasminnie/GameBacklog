@@ -13,7 +13,7 @@ public class GameRepository {
     private GameDao gameDao;
     private LiveData<List<Game>> allGames;
 
-    GameRepository(Application application) {
+    GameRepository( Application application) {
         AppDatabase db = AppDatabase.getInstance(application);
         gameDao = db.gameDao();
     }
@@ -21,7 +21,7 @@ public class GameRepository {
     LiveData<List<Game>> getAllGames() {
         return allGames;
     }
-    
+
     public void insert(Game game) {
         new insertAsyncTask(gameDao).execute(game);
     }
