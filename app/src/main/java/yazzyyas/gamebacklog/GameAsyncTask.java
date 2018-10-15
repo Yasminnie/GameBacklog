@@ -1,9 +1,7 @@
 package yazzyyas.gamebacklog;
 
 import android.os.AsyncTask;
-import android.util.Log;
 import java.util.List;
-import yazzyyas.gamebacklog.database.GameDao;
 import static yazzyyas.gamebacklog.MainActivity.TASK_DELETE_GAME;
 import static yazzyyas.gamebacklog.MainActivity.db;
 
@@ -13,7 +11,6 @@ public class GameAsyncTask extends AsyncTask<Game, Void, List<Game>> {
     public final static int TASK_INSERT_GAME = 3;
 
     int taskcode;
-    GameDao gameDao;
     MyRecyclerViewAdapter adapter;
 
     public GameAsyncTask(int taskcode, MyRecyclerViewAdapter adapter) {
@@ -36,7 +33,6 @@ public class GameAsyncTask extends AsyncTask<Game, Void, List<Game>> {
         }
 
         //To return a new list with the updated data, we get all the data from the database again.
-        Log.d("task", "doInBackground: " + db.gameDao().getAllGames());
         return (List) db.gameDao().getAllGames();
     }
 

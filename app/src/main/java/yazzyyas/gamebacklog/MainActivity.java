@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -21,7 +20,6 @@ import yazzyyas.gamebacklog.database.AppDatabase;
 public class MainActivity extends AppCompatActivity implements MyRecyclerViewAdapter.ItemClickListener {
 
     static AppDatabase db;
-    public static final String EXTRA_GAME = "Games";
     public final static int TASK_GET_ALL_GAMES = 0;
     public final static int TASK_DELETE_GAME = 1;
     public final static int TASK_UPDATE_GAME = 2;
@@ -56,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements MyRecyclerViewAda
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         gameRecyclerView.setLayoutManager(layoutManager);
-        gameRecyclerView.setHasFixedSize(true); // wat doet dit?
+        gameRecyclerView.setHasFixedSize(true);
 
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback =
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -88,13 +86,11 @@ public class MainActivity extends AppCompatActivity implements MyRecyclerViewAda
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        Log.d("code", "onActivityResult: " + "resultcode " + resultCode);
         if (resultCode == Activity.RESULT_OK) {
             switch (requestCode) {
                 case TASK_INSERT_GAME: // data in intent omzetten naar een game object
                     Game insertGame = new Game(null, data.getStringExtra("title"), data.getStringExtra("platform"), data.getStringExtra("notes"), new Date());
                     new GameAsyncTask(TASK_INSERT_GAME, gameAdapter).execute(insertGame);
-                    Log.d("insert", "onActivityResult: ");
                     break;
                 case TASK_UPDATE_GAME:
                     Game updateGame = new Game(data.getLongExtra("id", 0), data.getStringExtra("title"), data.getStringExtra("platform"), data.getStringExtra("notes"), new Date());
@@ -108,7 +104,6 @@ public class MainActivity extends AppCompatActivity implements MyRecyclerViewAda
     public void onItemClick(View view, int position) {
         try {
             Game gamePosition = new GameAsyncTask(TASK_GET_ALL_GAMES, gameAdapter).execute().get().get(position);
-
             Intent intent = new Intent(MainActivity.this, AddGameActivity.class);
 
             intent.putExtra("id", gamePosition.getId());
@@ -121,7 +116,5 @@ public class MainActivity extends AppCompatActivity implements MyRecyclerViewAda
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }
-
-
     }
 }

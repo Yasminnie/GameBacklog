@@ -48,7 +48,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
     public void setmData(List<Game> mData) {
         this.mData = mData;
-        notifyDataSetChanged(); // zegt tegen UI dat je nu items kan updaten in recyclerview
+        notifyDataSetChanged(); // zegt tegen UI dat je items kan updaten in recyclerview
     }
 
     // stores and recycles views as they are scrolled off screen
@@ -78,16 +78,6 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
                 e.printStackTrace();
             }
         }
-    }
-
-    // convenience method for getting data at click position
-    Game getItem(int id) {
-        return mData.get(id);
-    }
-
-    // allows clicks events to be caught
-    void setClickListener(ItemClickListener itemClickListener) {
-        this.mClickListener = itemClickListener;
     }
 
     // parent activity will implement this method to respond to click events
