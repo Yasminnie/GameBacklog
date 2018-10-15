@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.ViewHolder> {
 
@@ -16,9 +17,10 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     private ItemClickListener mClickListener;
 
     // data is passed into the constructor
-    MyRecyclerViewAdapter(Context context, List<Game> data) {
+    MyRecyclerViewAdapter(Context context, List<Game> data, ItemClickListener mClickListener) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
+        this.mClickListener = mClickListener;
     }
 
     // inflates the row layout from xml when needed
@@ -36,19 +38,25 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         holder.title.setText(game.getTitle());
         holder.platform.setText(game.getPlatform());
         holder.status.setText(game.getNotes());
+        holder.date.setText(game.getDate().toString());
     }
 
-    // total number of rows
     @Override
     public int getItemCount() {
         return mData.size();
     }
 
+    public void setmData(List<Game> mData) {
+        this.mData = mData;
+        notifyDataSetChanged(); // zegt tegen UI dat je nu items kan updaten in recyclerview
+    }
+
     // stores and recycles views as they are scrolled off screen
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView title;
         TextView platform;
         TextView status;
+        TextView date;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -56,12 +64,19 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
             title = itemView.findViewById(R.id.Title);
             platform = itemView.findViewById(R.id.platform);
             status = itemView.findViewById(R.id.status);
+            date = itemView.findViewById(R.id.date);
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View view) {
-
+            try {
+                mClickListener.onItemClick(view, getAdapterPosition());
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -77,15 +92,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
     // parent activity will implement this method to respond to click events
     public interface ItemClickListener {
-        void onItemClick(View view, int position);
+        void onItemClick(View view, int position) throws ExecutionException, InterruptedException;
     }
 
-    public void swapList(List<Game> newList) {
-        mData = newList;
-
-        if (newList != null) {
-            // Force the RecyclerView to refresh
-            this.notifyDataSetChanged();
-        }
-    }
 }

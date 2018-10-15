@@ -1,17 +1,16 @@
 package yazzyyas.gamebacklog;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 
 public class AddGameActivity extends AppCompatActivity {
-
     Spinner spinner;
     FloatingActionButton fabSaveGame;
 
@@ -19,45 +18,44 @@ public class AddGameActivity extends AppCompatActivity {
     EditText platform;
     EditText notes;
 
-    public final static int TASK_GET_ALL_GAMES = 0;
-    public final static int TASK_DELETE_GAME = 1;
-    public final static int TASK_UPDATE_GAME = 2;
-    public final static int TASK_INSERT_GAME = 3;
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.addgame);
 
         spinner = findViewById(R.id.status_spinner);
-        spinner();
-
         title = findViewById(R.id.titleTV);
         platform = findViewById(R.id.platformTV);
         notes = findViewById(R.id.notesTV);
+
+        title.setText(getIntent().getStringExtra("title"));
+        platform.setText(getIntent().getStringExtra("platform"));
+        notes.setText(getIntent().getStringExtra("notes"));
+
+        for (int i = 0; i < spinner.getAdapter().getCount() - 1; i++) {
+            if (spinner.getItemAtPosition(i) == getIntent().getStringExtra("status")) {
+                spinner.setSelection(i);
+                break;
+            }
+        }
+
+        final long gameID = getIntent().getLongExtra("id", -1l);
 
         fabSaveGame = findViewById(R.id.fabSaveGame);
         fabSaveGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Game newGame = new Game(title.getText().toString(), platform.getText().toString(), notes.getText().toString());
+                Intent intent = new Intent();
+                intent.putExtra("id", gameID);
+                intent.putExtra("title", title.getText().toString());
+                intent.putExtra("platform", platform.getText().toString());
+                intent.putExtra("notes", notes.getText().toString());
 
-                new MainActivity.GameAsyncTask(TASK_INSERT_GAME).execute(newGame);
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(intent);
+                intent.putExtra("status", spinner.getSelectedItem().toString());
+                setResult(Activity.RESULT_OK, intent);
 
                 finish();
             }
         });
-    }
-
-    private void spinner() {
-// Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.status_array, android.R.layout.simple_spinner_item);
-// Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-// Apply the adapter to the spinner
-        spinner.setAdapter(adapter);
     }
 }

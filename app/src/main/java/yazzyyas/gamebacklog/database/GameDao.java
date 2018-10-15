@@ -1,6 +1,5 @@
 package yazzyyas.gamebacklog.database;
 
-import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
@@ -15,7 +14,7 @@ import yazzyyas.gamebacklog.Game;
 
 public interface GameDao {
     @Query("SELECT * FROM game")
-    LiveData<List<Game>> getAllGames();
+    List<Game> getAllGames();
 
     @Insert
     void insertGames(Game games);
